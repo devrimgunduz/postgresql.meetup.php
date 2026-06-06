@@ -94,7 +94,7 @@ $meetups = get_past_meetups();
                 <p><?= nl2br(h($notes)) ?></p>
               </div>
             <?php endif; ?>
-            <?php if (!empty(\$meetup['talks'])): ?>
+            <?php if (!empty($meetup['talks'])): ?>
             <div class="past-talks">
               <?php foreach ($meetup['talks'] as $talk):
                 $ttr   = $talk['translations'];

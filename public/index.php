@@ -100,7 +100,7 @@ $meetup  = get_next_meetup();
   </section>
   <?php endif; ?>
 
-  <?php if (!empty(\$meetup['talks'])): ?>
+  <?php if (!empty($meetup['talks'])): ?>
   <section class="talks-section">
     <div class="container">
       <h2 class="section-heading"><?= $lang === 'tr' ? 'Sunumlar' : 'Talks' ?></h2>
