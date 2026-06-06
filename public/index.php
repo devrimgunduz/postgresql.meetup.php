@@ -88,7 +88,19 @@ $meetup  = get_next_meetup();
     </div>
   </section>
 
-  <?php if (!empty($meetup['talks'])): ?>
+  <?php $notes = t_meetup($tr, 'notes', $lang); ?>
+  <?php if ($notes): ?>
+  <section class="notes-section">
+    <div class="container">
+      <div class="notes-box">
+        <h3><?= $lang === 'tr' ? 'Meetup hakkında' : 'About the meetup' ?></h3>
+        <p><?= nl2br(h($notes)) ?></p>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
+
+  <?php if (!empty(\$meetup['talks'])): ?>
   <section class="talks-section">
     <div class="container">
       <h2 class="section-heading"><?= $lang === 'tr' ? 'Sunumlar' : 'Talks' ?></h2>
@@ -127,17 +139,7 @@ $meetup  = get_next_meetup();
   </section>
   <?php endif; ?>
 
-  <?php $notes = t_meetup($tr, 'notes', $lang); ?>
-  <?php if ($notes): ?>
-  <section class="notes-section">
-    <div class="container">
-      <div class="notes-box">
-        <h3><?= $lang === 'tr' ? 'Notlar' : 'Notes' ?></h3>
-        <p><?= nl2br(h($notes)) ?></p>
-      </div>
-    </div>
-  </section>
-  <?php endif; ?>
+
 
 <?php else: ?>
 

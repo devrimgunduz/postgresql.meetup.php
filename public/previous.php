@@ -87,7 +87,14 @@ $meetups = get_past_meetups();
               <?php endif; ?>
             </div>
 
-            <?php if (!empty($meetup['talks'])): ?>
+            <?php $notes = t_meetup($tr, 'notes', $lang); ?>
+            <?php if ($notes): ?>
+              <div class="past-notes">
+                <strong><?= $lang === 'tr' ? 'Meetup hakkında' : 'About the meetup' ?></strong>
+                <p><?= nl2br(h($notes)) ?></p>
+              </div>
+            <?php endif; ?>
+            <?php if (!empty(\$meetup['talks'])): ?>
             <div class="past-talks">
               <?php foreach ($meetup['talks'] as $talk):
                 $ttr   = $talk['translations'];

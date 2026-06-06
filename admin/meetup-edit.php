@@ -161,7 +161,7 @@ $tr = $meetup['translations'] ?? [];
           </div>
           <div class="form-row">
             <label>Notes / Additional Info
-              <textarea name="trans_<?= h($code) ?>_notes" rows="4"><?= h($tr[$code]['notes'] ?? '') ?></textarea>
+              <textarea name="trans_<?= h($code) ?>_notes" rows="5"><?= h($tr[$code]['notes'] ?? '') ?></textarea>
             </label>
           </div>
         </div>
