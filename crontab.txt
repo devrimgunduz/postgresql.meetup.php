@@ -1,0 +1,6 @@
+# postgresql.istanbul – auto-archive past meetups
+# Runs every hour; calls the PostgreSQL function that flips
+# status='published' → status='past' once event_date has passed.
+# Add to www-data's crontab: crontab -u www-data -e
+
+0 * * * * php /var/www/postgresql.istanbul/cron/archive.php >> /var/log/pgistanbul-cron.log 2>&1
