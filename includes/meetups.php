@@ -154,6 +154,7 @@ function save_meetup(array $data, ?int $id = null): int {
         $code = $lang['code'];
         foreach (['meetup_title', 'notes'] as $field) {
             $key   = "trans_{$code}_{$field}";
+            if (!array_key_exists($key, $data)) continue;
             $value = $data[$key] ?? null;
             save_meetup_translation($id, $code, $field, $value);
         }
@@ -215,6 +216,7 @@ function save_talk(array $data, ?int $id = null): int {
         $code = $lang['code'];
         foreach (['talk_title', 'talk_abstract', 'speaker_bio'] as $field) {
             $key   = "trans_{$code}_{$field}";
+            if (!array_key_exists($key, $data)) continue;
             $value = $data[$key] ?? null;
             save_talk_translation($id, $code, $field, $value);
         }
