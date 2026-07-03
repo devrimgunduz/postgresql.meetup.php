@@ -26,21 +26,58 @@ $is_new    = !$edit_id && isset($_GET['new']);
 $success = $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $tid  = !empty($_POST['talk_id']) && is_numeric($_POST['talk_id']) ? (int)$_POST['talk_id'] : null;
-    $data = [
-        'meetup_id'         => $meetup_id,
-        'sort_order'        => (int)($_POST['sort_order'] ?? 0),
-        'speaker_name'      => $_POST['speaker_name'] ?? '',
-        'speaker_photo_url' => $_POST['speaker_photo_url'] ?? '',
-        'talk_duration_min' => !empty($_POST['talk_duration_min']) ? (int)$_POST['talk_duration_min'] : null,
-    ];
-    foreach ($langs as $l) {
-        $code = $l['code'];
-        foreach (['talk_title', 'talk_abstract', 'speaker_bio'] as $field) {
-            $data["trans_{$code}_{$field}"] = $_POST["trans_{$code}_{$field}"] ?? '';
-        }
+    $tid = !empty($_POST['talk_id']) && is_numeric($_POST['talk_id']) ? (int)$_POST['talk_id'] : null;
+
+    // Existing photo/slides (if editing) — used as fallback / for cleanup on replace
+    $existing_photo  = null;
+    $existing_slides = null;
+    if ($tid) {
+        $existing        = get_talk($tid);
+        $existing_photo  = $existing['speaker_photo_url'] ?? null;
+        $existing_slides = $existing['slides_url'] ?? null;
     }
+
     try {
+        $remove_photo  = isset($_POST['remove_photo']);
+        $remove_slides = isset($_POST['remove_slides']);
+        $new_photo     = handle_speaker_photo_upload($_FILES['speaker_photo'] ?? []);
+        $new_slides    = handle_slides_upload($_FILES['slides'] ?? []);
+
+        if ($new_photo) {
+            delete_speaker_photo($existing_photo);
+            $photo_url = $new_photo;
+        } elseif ($remove_photo) {
+            delete_speaker_photo($existing_photo);
+            $photo_url = '';
+        } else {
+            $photo_url = $existing_photo ?? '';
+        }
+
+        if ($new_slides) {
+            delete_slides($existing_slides);
+            $slides_url = $new_slides;
+        } elseif ($remove_slides) {
+            delete_slides($existing_slides);
+            $slides_url = '';
+        } else {
+            $slides_url = $existing_slides ?? '';
+        }
+
+        $data = [
+            'meetup_id'         => $meetup_id,
+            'sort_order'        => (int)($_POST['sort_order'] ?? 0),
+            'speaker_name'      => $_POST['speaker_name'] ?? '',
+            'speaker_photo_url' => $photo_url,
+            'slides_url'        => $slides_url,
+            'talk_duration_min' => !empty($_POST['talk_duration_min']) ? (int)$_POST['talk_duration_min'] : null,
+        ];
+        foreach ($langs as $l) {
+            $code = $l['code'];
+            foreach (['talk_title', 'talk_abstract', 'speaker_bio'] as $field) {
+                $data["trans_{$code}_{$field}"] = $_POST["trans_{$code}_{$field}"] ?? '';
+            }
+        }
+
         save_talk($data, $tid);
         header("Location: /admin/talks.php?meetup_id=$meetup_id&saved=1");
         exit;
@@ -54,8 +91,8 @@ $saved_flash = isset($_GET['saved']);
 
 // Get venue name for breadcrumb
 $def_lang = get_default_lang();
-$venue    = $meetup['translations'][$def_lang]['venue_name']
-          ?? ($meetup['translations'][array_key_first($meetup['translations'])]['venue_name'] ?? "Meetup #$meetup_id");
+$venue    = $meetup['translations'][$def_lang]['meetup_title']
+          ?? ($meetup['translations'][array_key_first($meetup['translations'])]['meetup_title'] ?? "Meetup #$meetup_id");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -133,7 +170,7 @@ $venue    = $meetup['translations'][$def_lang]['venue_name']
     ?>
     <div class="edit-form-wrap">
       <h2 class="form-section-title"><?= $edit_talk ? 'Edit Talk' : 'Add Talk' ?></h2>
-      <form method="POST" class="edit-form">
+      <form method="POST" class="edit-form" enctype="multipart/form-data">
         <?php if ($edit_talk): ?>
           <input type="hidden" name="talk_id" value="<?= $edit_talk['id'] ?>">
         <?php endif; ?>
@@ -144,10 +181,20 @@ $venue    = $meetup['translations'][$def_lang]['venue_name']
             <label>Speaker Name
               <input type="text" name="speaker_name" value="<?= h($t['speaker_name'] ?? '') ?>">
             </label>
-            <label>Speaker Photo URL
-              <input type="url" name="speaker_photo_url" value="<?= h($t['speaker_photo_url'] ?? '') ?>">
+            <label>Speaker Photo <span class="hint">(JPG or PNG, max 5 MB)</span>
+              <input type="file" name="speaker_photo" accept="image/jpeg,image/png">
             </label>
           </div>
+          <?php if (!empty($t['speaker_photo_url'])): ?>
+          <div class="form-row">
+            <div class="photo-preview">
+              <img src="<?= h($t['speaker_photo_url']) ?>" alt="Current photo">
+              <label class="checkbox-label">
+                <input type="checkbox" name="remove_photo" value="1"> Remove this photo
+              </label>
+            </div>
+          </div>
+          <?php endif; ?>
           <div class="form-row form-row-2">
             <label>Duration (minutes)
               <input type="number" name="talk_duration_min" value="<?= h($t['talk_duration_min'] ?? '') ?>">
@@ -156,6 +203,21 @@ $venue    = $meetup['translations'][$def_lang]['venue_name']
               <input type="number" name="sort_order" value="<?= h($t['sort_order'] ?? count($talks)) ?>">
             </label>
           </div>
+          <div class="form-row">
+            <label>Slides <span class="hint">(PDF only, max 25 MB)</span>
+              <input type="file" name="slides" accept="application/pdf">
+            </label>
+          </div>
+          <?php if (!empty($t['slides_url'])): ?>
+          <div class="form-row">
+            <div class="file-preview">
+              <a href="<?= h($t['slides_url']) ?>" target="_blank">📄 Current slides</a>
+              <label class="checkbox-label">
+                <input type="checkbox" name="remove_slides" value="1"> Remove slides
+              </label>
+            </div>
+          </div>
+          <?php endif; ?>
         </div>
 
         <div class="form-section">

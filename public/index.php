@@ -131,6 +131,11 @@ $meetup  = get_next_meetup();
                 ⏱ <?= h($talk['talk_duration_min']) ?> <?= $lang === 'tr' ? 'dak' : 'min' ?>
               </div>
             <?php endif; ?>
+            <?php if (!empty($talk['slides_url'])): ?>
+              <a href="<?= h($talk['slides_url']) ?>" target="_blank" class="btn-slides">
+                📄 <?= $lang === 'tr' ? 'Slaytları İndir' : 'Download Slides' ?>
+              </a>
+            <?php endif; ?>
           </div>
         </article>
         <?php endforeach; ?>

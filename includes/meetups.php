@@ -153,9 +153,9 @@ function save_meetup(array $data, ?int $id = null): int {
     foreach (get_active_languages() as $lang) {
         $code = $lang['code'];
         foreach (['meetup_title', 'notes'] as $field) {
-            $key   = "trans_{$code}_{$field}";
+            $key = "trans_{$code}_{$field}";
             if (!array_key_exists($key, $data)) continue;
-            $value = $data[$key] ?? null;
+            $value = $data[$key];
             save_meetup_translation($id, $code, $field, $value);
         }
     }
@@ -191,7 +191,7 @@ function get_talk(int $id): ?array {
 }
 
 function save_talk(array $data, ?int $id = null): int {
-    $fields = ['meetup_id', 'sort_order', 'speaker_name', 'speaker_photo_url', 'talk_duration_min'];
+    $fields = ['meetup_id', 'sort_order', 'speaker_name', 'speaker_photo_url', 'talk_duration_min', 'slides_url'];
     $vals   = [];
     foreach ($fields as $f) {
         $v      = $data[$f] ?? null;
@@ -215,9 +215,9 @@ function save_talk(array $data, ?int $id = null): int {
     foreach (get_active_languages() as $lang) {
         $code = $lang['code'];
         foreach (['talk_title', 'talk_abstract', 'speaker_bio'] as $field) {
-            $key   = "trans_{$code}_{$field}";
+            $key = "trans_{$code}_{$field}";
             if (!array_key_exists($key, $data)) continue;
-            $value = $data[$key] ?? null;
+            $value = $data[$key];
             save_talk_translation($id, $code, $field, $value);
         }
     }
@@ -246,4 +246,128 @@ function format_date(string $dt, string $lang, ?string $end = null): string {
         $base .= ' – ' . $e->format('H:i');
     }
     return $base;
+}
+
+// ── Speaker photo upload handling ────────────────────────────
+
+define('UPLOAD_DIR_FS',  __DIR__ . '/../public/uploads/speakers/');
+define('UPLOAD_DIR_URL', '/uploads/speakers/');
+
+/**
+ * Handle an uploaded speaker photo.
+ * Returns the new relative URL path on success, or null if no file was uploaded.
+ * Throws Exception on validation failure.
+ */
+function handle_speaker_photo_upload(array $file): ?string {
+    if (!isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
+        return null; // no file selected — leave existing photo untouched
+    }
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('Photo upload failed (error code ' . $file['error'] . ').');
+    }
+
+    $max_bytes = 5 * 1024 * 1024; // 5 MB
+    if ($file['size'] > $max_bytes) {
+        throw new Exception('Photo must be smaller than 5 MB.');
+    }
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime  = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
+    if (!isset($allowed[$mime])) {
+        throw new Exception('Only JPG and PNG images are allowed.');
+    }
+    $ext = $allowed[$mime];
+
+    if (!is_dir(UPLOAD_DIR_FS)) {
+        mkdir(UPLOAD_DIR_FS, 0755, true);
+    }
+
+    $filename = bin2hex(random_bytes(16)) . '.' . $ext;
+    $dest     = UPLOAD_DIR_FS . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        throw new Exception('Could not save uploaded photo.');
+    }
+    chmod($dest, 0644);
+
+    return UPLOAD_DIR_URL . $filename;
+}
+
+/**
+ * Delete a speaker photo file from disk given its stored URL path.
+ * Safe no-op if the path doesn't point inside the uploads directory
+ * (e.g. it's a legacy external URL from before this feature existed).
+ */
+function delete_speaker_photo(?string $url_path): void {
+    if (!$url_path || strpos($url_path, UPLOAD_DIR_URL) !== 0) {
+        return;
+    }
+    $filename = basename($url_path);
+    $path     = UPLOAD_DIR_FS . $filename;
+    if (is_file($path)) {
+        @unlink($path);
+    }
+}
+
+// ── Slides upload handling ───────────────────────────────────
+
+define('SLIDES_DIR_FS',  __DIR__ . '/../public/uploads/slides/');
+define('SLIDES_DIR_URL', '/uploads/slides/');
+
+/**
+ * Handle an uploaded slide deck (PDF only).
+ * Returns the new relative URL path on success, or null if no file was uploaded.
+ * Throws Exception on validation failure.
+ */
+function handle_slides_upload(array $file): ?string {
+    if (!isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
+        return null; // no file selected — leave existing slides untouched
+    }
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('Slides upload failed (error code ' . $file['error'] . ').');
+    }
+
+    $max_bytes = 25 * 1024 * 1024; // 25 MB
+    if ($file['size'] > $max_bytes) {
+        throw new Exception('Slides file must be smaller than 25 MB.');
+    }
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime  = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if ($mime !== 'application/pdf') {
+        throw new Exception('Only PDF files are allowed for slides.');
+    }
+
+    if (!is_dir(SLIDES_DIR_FS)) {
+        mkdir(SLIDES_DIR_FS, 0755, true);
+    }
+
+    $filename = bin2hex(random_bytes(16)) . '.pdf';
+    $dest     = SLIDES_DIR_FS . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        throw new Exception('Could not save uploaded slides.');
+    }
+    chmod($dest, 0644);
+
+    return SLIDES_DIR_URL . $filename;
+}
+
+/**
+ * Delete a slides file from disk given its stored URL path.
+ */
+function delete_slides(?string $url_path): void {
+    if (!$url_path || strpos($url_path, SLIDES_DIR_URL) !== 0) {
+        return;
+    }
+    $filename = basename($url_path);
+    $path     = SLIDES_DIR_FS . $filename;
+    if (is_file($path)) {
+        @unlink($path);
+    }
 }

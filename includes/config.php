@@ -9,7 +9,7 @@ define('DB_PASS', getenv('PGPASSWORD') ?: '');
 
 define('SITE_NAME',    'PostgreSQL İstanbul');
 define('SESSION_NAME', 'pgist_sess');
-define('SESSION_TTL',  3600);
+define('SESSION_TTL', 86400);
 
 function db(): PDO {
     static $pdo = null;

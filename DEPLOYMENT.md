@@ -132,3 +132,63 @@ chmod -R 640 /var/www/postgresql.istanbul/includes/config.php
 4. Set status to **Published** when ready to go live
 5. The meetup appears on the homepage automatically
 6. After the event date + 6 hours, it moves to **Past** automatically (or you can flip it manually)
+
+---
+
+## Speaker photo uploads
+
+Speaker photos are uploaded as files (JPG/PNG, max 5 MB) and stored on disk under:
+
+```
+/var/www/html/postgresql.istanbul/public/uploads/speakers/
+```
+
+Make sure this directory is writable by the web server user:
+
+```bash
+mkdir -p /var/www/html/postgresql.istanbul/public/uploads/speakers
+chown -R apache:apache /var/www/html/postgresql.istanbul/public/uploads
+chmod 755 /var/www/html/postgresql.istanbul/public/uploads/speakers
+```
+
+PHP's upload limits must be large enough — check `/etc/php.ini`:
+
+```ini
+upload_max_filesize = 8M
+post_max_size = 8M
+```
+
+Reload PHP-FPM after changing these:
+
+```bash
+systemctl reload php-fpm
+```
+
+When a speaker photo is replaced or removed via the admin panel, the old file is automatically deleted from disk.
+
+---
+
+## Slide deck uploads
+
+Speakers' slides (PDF only, max 25 MB) are uploaded via the admin panel and stored under:
+
+```
+/var/www/html/postgresql.istanbul/public/uploads/slides/
+```
+
+Make sure this directory is writable:
+
+```bash
+mkdir -p /var/www/html/postgresql.istanbul/public/uploads/slides
+chown -R apache:apache /var/www/html/postgresql.istanbul/public/uploads
+chmod 755 /var/www/html/postgresql.istanbul/public/uploads/slides
+```
+
+A "Download Slides" link/button appears automatically on the public meetup page for
+any talk that has slides attached — both the upcoming meetup and past meetups.
+
+Run the schema migration to add the new column:
+
+```sql
+ALTER TABLE talks ADD COLUMN IF NOT EXISTS slides_url TEXT;
+```

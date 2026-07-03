@@ -241,6 +241,22 @@ body {
   letter-spacing: .03em;
 }
 
+.btn-slides {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin-top: 1rem;
+  padding: .5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--cyan);
+  font-size: .82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 150ms, background 150ms;
+}
+.btn-slides:hover { border-color: var(--cyan); background: rgba(0,200,212,.08); }
+
 /* ---- Notes ---- */
 .notes-section { padding: 0 0 4rem; }
 .notes-box {
@@ -336,6 +352,14 @@ body {
 }
 .past-talk-title { font-size: .9rem; font-weight: 600; color: var(--white); flex: 1; }
 .past-talk-speaker { font-size: .8rem; color: var(--grey); flex-shrink: 0; align-self: center; }
+.past-talk-slides {
+  font-size: .78rem;
+  color: var(--cyan);
+  text-decoration: none;
+  flex-shrink: 0;
+  align-self: center;
+}
+.past-talk-slides:hover { text-decoration: underline; }
 .past-notes { font-size: .85rem; color: var(--grey); margin-top: 1rem; }
 
 .empty-state { text-align: center; padding: 4rem; color: var(--grey); }

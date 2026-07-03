@@ -103,6 +103,11 @@ $meetups = get_past_meetups();
               <div class="past-talk">
                 <div class="past-talk-title"><?= h($title ?: '—') ?></div>
                 <div class="past-talk-speaker"><?= h($talk['speaker_name']) ?></div>
+                <?php if (!empty($talk['slides_url'])): ?>
+                  <a href="<?= h($talk['slides_url']) ?>" target="_blank" class="past-talk-slides">
+                    📄 <?= $lang === 'tr' ? 'Slaytlar' : 'Slides' ?>
+                  </a>
+                <?php endif; ?>
               </div>
               <?php endforeach; ?>
             </div>

@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS talks (
     sort_order        INTEGER NOT NULL DEFAULT 0,
     speaker_name      VARCHAR(255),
     speaker_photo_url TEXT,
-    talk_duration_min INTEGER
+    talk_duration_min INTEGER,
+    slides_url        TEXT
 );
 
 CREATE TABLE IF NOT EXISTS talk_translations (
@@ -94,3 +95,6 @@ ON CONFLICT DO NOTHING;
 -- Run on existing installations:
 ALTER TABLE meetups ADD COLUMN IF NOT EXISTS event_end TIMESTAMPTZ;
 UPDATE meetup_translations SET field = 'meetup_title' WHERE field = 'venue_name';
+
+-- Migration: add slides_url column for uploaded slide decks
+ALTER TABLE talks ADD COLUMN IF NOT EXISTS slides_url TEXT;
