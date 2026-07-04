@@ -1,0 +1,12 @@
+# Local configuration overrides — contains real credentials, never commit
+includes/config_local.php
+
+# Uploaded user content
+public/uploads/speakers/*
+public/uploads/slides/*
+!public/uploads/speakers/README.txt
+!public/uploads/slides/.gitkeep
+
+# OS / editor cruft
+.DS_Store
+*.swp

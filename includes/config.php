@@ -1,15 +1,43 @@
 <?php
 // includes/config.php
 
-define('DB_HOST', getenv('PGHOST')     ?: 'localhost');
-define('DB_PORT', getenv('PGPORT')     ?: '5432');
-define('DB_NAME', getenv('PGDATABASE') ?: 'pgistanbul');
-define('DB_USER', getenv('PGUSER')     ?: 'pgistanbul');
-define('DB_PASS', getenv('PGPASSWORD') ?: '');
+// ── Default settings ──────────────────────────────────────────
+// These can be overridden by environment variables, or by
+// includes/config_local.php (see below) for settings you don't
+// want tracked in git — e.g. a real DB password on a shared server.
 
-define('SITE_NAME',    'PostgreSQL İstanbul');
-define('SESSION_NAME', 'pgist_sess');
-define('SESSION_TTL', 86400);
+$db_host = getenv('PGHOST')     ?: 'localhost';
+$db_port = getenv('PGPORT')     ?: '5432';
+$db_name = getenv('PGDATABASE') ?: 'pgistanbul';
+$db_user = getenv('PGUSER')     ?: 'pgistanbul';
+$db_pass = getenv('PGPASSWORD') ?: '';
+
+$site_name    = 'PostgreSQL İstanbul';
+$session_name = 'pgist_sess';
+$session_ttl  = 86400;
+
+// ── Local overrides ────────────────────────────────────────────
+// Create includes/config_local.php (gitignored) to override any of
+// the $variables above. It is included here, before the constants
+// below are finalized, so anything it sets takes effect.
+// See includes/config_local.php.example for the format.
+
+$config_local_path = __DIR__ . '/config_local.php';
+if (file_exists($config_local_path)) {
+    require $config_local_path;
+}
+
+// ── Finalize as constants ────────────────────────────────────────
+
+define('DB_HOST', $db_host);
+define('DB_PORT', $db_port);
+define('DB_NAME', $db_name);
+define('DB_USER', $db_user);
+define('DB_PASS', $db_pass);
+
+define('SITE_NAME',    $site_name);
+define('SESSION_NAME', $session_name);
+define('SESSION_TTL',  $session_ttl);
 
 function db(): PDO {
     static $pdo = null;

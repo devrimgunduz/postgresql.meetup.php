@@ -1,0 +1,22 @@
+<?php
+// includes/config_local.php.example
+//
+// Copy this file to includes/config_local.php (same directory) to override
+// any setting from config.php on this specific server, without touching
+// version control. config_local.php is gitignored — safe for real
+// credentials, local paths, etc.
+//
+// Only the variables you actually want to override need to be set here;
+// anything you leave out keeps its default from config.php.
+
+// Database credentials
+// $db_host = 'localhost';
+// $db_port = '5432';
+$db_name = 'pgistanbul';
+$db_user = 'pgistanbul';
+$db_pass = 'your-strong-password-here';
+
+// Site settings
+// $site_name    = 'PostgreSQL İstanbul';
+// $session_name = 'pgist_sess';
+// $session_ttl  = 86400; // seconds
