@@ -192,3 +192,21 @@ Run the schema migration to add the new column:
 ```sql
 ALTER TABLE talks ADD COLUMN IF NOT EXISTS slides_url TEXT;
 ```
+
+---
+
+## Local configuration overrides (config_local.php)
+
+To keep real credentials and server-specific settings out of git, create
+`includes/config_local.php` on each server — it's automatically loaded by
+`config.php` if present, and is gitignored.
+
+```bash
+cp includes/config_local.php.example includes/config_local.php
+nano includes/config_local.php   # fill in real DB password, etc.
+chmod 640 includes/config_local.php
+```
+
+Any variable you set there (`$db_host`, `$db_pass`, `$session_ttl`, etc.)
+overrides the corresponding default in `config.php`. Settings you don't
+override keep using the default or environment-variable value.

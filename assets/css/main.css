@@ -339,6 +339,12 @@ body {
   color: var(--white);
   margin-bottom: .4rem;
 }
+.past-venue-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 150ms;
+}
+.past-venue-link:hover { color: var(--cyan); }
 .past-address { font-size: .85rem; color: var(--grey); }
 
 .past-talks { display: grid; gap: .75rem; }
@@ -394,3 +400,48 @@ body {
   gap: .5rem;
   align-items: center;
 }
+
+/* ---- Pagination ---- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.page-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .6rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--white);
+  font-size: .85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 150ms, background 150ms;
+}
+.page-link:hover { border-color: var(--cyan); background: rgba(0,200,212,.08); }
+.page-link.disabled {
+  color: var(--grey);
+  border-color: var(--border);
+  opacity: .4;
+  cursor: default;
+  pointer-events: none;
+}
+.page-info {
+  font-size: .82rem;
+  color: var(--grey);
+  letter-spacing: .02em;
+}
+
+/* ---- Back link (meetup permalink page) ---- */
+.back-link {
+  display: inline-block;
+  color: var(--grey);
+  font-size: .85rem;
+  text-decoration: none;
+  transition: color 150ms;
+}
+.back-link:hover { color: var(--cyan); }

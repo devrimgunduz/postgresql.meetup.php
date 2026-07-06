@@ -2,16 +2,23 @@
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/meetups.php';
 
-$lang    = current_lang();
-$langs   = get_active_languages();
-$meetup  = get_next_meetup();
+$lang  = current_lang();
+$langs = get_active_languages();
+$id    = isset($_GET['id']) && is_numeric($_GET['id']) ? (int)$_GET['id'] : null;
+$meetup = $id ? get_public_meetup($id) : null;
 ?>
 <!DOCTYPE html>
 <html lang="<?= h($lang) ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PostgreSQL İstanbul</title>
+<title>
+  <?php if ($meetup): ?>
+    <?= h(t_meetup($meetup['translations'], 'meetup_title', $lang)) ?> – PostgreSQL İstanbul
+  <?php else: ?>
+    PostgreSQL İstanbul
+  <?php endif; ?>
+</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -26,7 +33,7 @@ $meetup  = get_next_meetup();
       <span class="logo-text">PostgreSQL<br><strong>İstanbul</strong></span>
     </a>
     <nav class="site-nav">
-      <a href="/?lang=<?= h($lang) ?>" class="nav-link active">
+      <a href="/?lang=<?= h($lang) ?>" class="nav-link">
         <?= $lang === 'tr' ? 'Ana Sayfa' : 'Home' ?>
       </a>
       <a href="/previous.php?lang=<?= h($lang) ?>" class="nav-link">
@@ -36,7 +43,7 @@ $meetup  = get_next_meetup();
       <div class="lang-switcher">
         <?php foreach ($langs as $l): ?>
           <?php if ($l['code'] !== $lang): ?>
-            <a href="?lang=<?= h($l['code']) ?>" class="nav-link lang-switch"><?= h($l['label']) ?></a>
+            <a href="?id=<?= h($id) ?>&lang=<?= h($l['code']) ?>" class="nav-link lang-switch"><?= h($l['label']) ?></a>
           <?php endif; ?>
         <?php endforeach; ?>
       </div>
@@ -47,9 +54,19 @@ $meetup  = get_next_meetup();
 
 <main class="site-main">
 <?php if ($meetup):
-  $hero_label = $lang === 'tr' ? 'Sonraki Etkinlik' : 'Next Meetup';
+  $hero_label = $meetup['status'] === 'past'
+    ? ($lang === 'tr' ? 'Geçmiş Etkinlik' : 'Past Meetup')
+    : ($lang === 'tr' ? 'Sonraki Etkinlik' : 'Next Meetup');
   require __DIR__ . '/partials/meetup-detail.php';
 ?>
+
+  <section class="notes-section">
+    <div class="container">
+      <a href="/previous.php?lang=<?= h($lang) ?>" class="back-link">
+        ← <?= $lang === 'tr' ? 'Tüm geçmiş etkinlikler' : 'All past meetups' ?>
+      </a>
+    </div>
+  </section>
 
 <?php else: ?>
 
@@ -57,18 +74,20 @@ $meetup  = get_next_meetup();
     <div class="container">
       <div class="elephant-large">🐘</div>
       <h1 class="hero-empty-title">
-        <?= $lang === 'tr'
-          ? 'Bir sonraki etkinlik için takipte kalın!'
-          : 'Stay tuned for the next one!' ?>
+        <?= $lang === 'tr' ? 'Etkinlik bulunamadı' : 'Meetup not found' ?>
       </h1>
       <p class="hero-empty-sub">
         <?= $lang === 'tr'
-          ? 'Bir sonraki PostgreSQL İstanbul buluşmasını yakında duyuracağız.'
-          : 'We\'ll announce the next PostgreSQL İstanbul meetup soon.' ?>
+          ? 'Aradığınız etkinlik mevcut değil ya da kaldırılmış olabilir.'
+          : 'This meetup doesn\'t exist or may have been removed.' ?>
       </p>
       <div class="social-links">
-        <a href="https://twitter.com/pgistanbul" target="_blank" class="social-btn">𝕏 Twitter</a>
-        <a href="https://www.meetup.com/postgresql-istanbul/" target="_blank" class="social-btn">Meetup.com</a>
+        <a href="/previous.php?lang=<?= h($lang) ?>" class="social-btn">
+          <?= $lang === 'tr' ? 'Geçmiş Etkinlikler' : 'Past Meetups' ?>
+        </a>
+        <a href="/?lang=<?= h($lang) ?>" class="social-btn">
+          <?= $lang === 'tr' ? 'Ana Sayfa' : 'Home' ?>
+        </a>
       </div>
     </div>
   </section>

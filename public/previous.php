@@ -2,9 +2,18 @@
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/meetups.php';
 
-$lang    = current_lang();
-$langs   = get_active_languages();
-$meetups = get_past_meetups();
+$lang     = current_lang();
+$langs    = get_active_languages();
+$per_page = 10;
+$page     = max(1, (int)($_GET['page'] ?? 1));
+$total    = count_past_meetups();
+$total_pages = max(1, (int)ceil($total / $per_page));
+$page     = min($page, $total_pages); // clamp to last page if out of range
+$meetups  = get_past_meetups($page, $per_page);
+
+function page_url(int $p, string $lang): string {
+    return '?page=' . $p . '&lang=' . urlencode($lang);
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?= h($lang) ?>">
@@ -75,7 +84,11 @@ $meetups = get_past_meetups();
               <?php if ($meetup['event_date']): ?>
               <div class="past-date"><?= h(format_date($meetup['event_date'], $lang, $meetup['event_end'] ?? null)) ?></div>
               <?php endif; ?>
-              <h2 class="past-venue"><?= h($title ?: '—') ?></h2>
+              <h2 class="past-venue">
+                <a href="/meetup.php?id=<?= (int)$meetup['id'] ?>&lang=<?= h($lang) ?>" class="past-venue-link">
+                  <?= h($title ?: '—') ?>
+                </a>
+              </h2>
               <?php if ($meetup['venue_address']): ?>
               <div class="past-address">📍 <?= h($meetup['venue_address']) ?>
                 <?php if ($meetup['venue_map_url']): ?>
@@ -112,13 +125,35 @@ $meetups = get_past_meetups();
               <?php endforeach; ?>
             </div>
             <?php endif; ?>
-
-            <?php if ($notes): ?>
-              <div class="past-notes"><?= nl2br(h($notes)) ?></div>
-            <?php endif; ?>
           </article>
           <?php endforeach; ?>
         </div>
+
+        <?php if ($total_pages > 1): ?>
+        <nav class="pagination">
+          <?php if ($page > 1): ?>
+            <a href="<?= page_url($page - 1, $lang) ?>" class="page-link page-prev">
+              ← <?= $lang === 'tr' ? 'Önceki' : 'Previous' ?>
+            </a>
+          <?php else: ?>
+            <span class="page-link page-prev disabled">← <?= $lang === 'tr' ? 'Önceki' : 'Previous' ?></span>
+          <?php endif; ?>
+
+          <span class="page-info">
+            <?= $lang === 'tr'
+              ? "Sayfa {$page} / {$total_pages}"
+              : "Page {$page} of {$total_pages}" ?>
+          </span>
+
+          <?php if ($page < $total_pages): ?>
+            <a href="<?= page_url($page + 1, $lang) ?>" class="page-link page-next">
+              <?= $lang === 'tr' ? 'Sonraki' : 'Next' ?> →
+            </a>
+          <?php else: ?>
+            <span class="page-link page-next disabled"><?= $lang === 'tr' ? 'Sonraki' : 'Next' ?> →</span>
+          <?php endif; ?>
+        </nav>
+        <?php endif; ?>
       <?php endif; ?>
     </div>
   </section>

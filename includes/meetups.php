@@ -78,6 +78,23 @@ function t_talk(array $translations, string $field, string $lang): string {
 
 // ── Meetup CRUD ───────────────────────────────────────────────
 
+/**
+ * Fetch a single meetup for public display — only if it's published or past.
+ * Returns null for drafts or nonexistent IDs, so drafts can never leak via a direct link.
+ */
+function get_public_meetup(int $id): ?array {
+    auto_archive();
+    $st = db()->prepare(
+        "SELECT * FROM meetups WHERE id = ? AND status IN ('published', 'past')"
+    );
+    $st->execute([$id]);
+    $row = $st->fetch();
+    if (!$row) return null;
+    $row['translations'] = get_meetup_translations($id);
+    $row['talks']        = get_talks($id);
+    return $row;
+}
+
 function get_next_meetup(): ?array {
     auto_archive();
     $st = db()->prepare(
@@ -94,12 +111,23 @@ function get_next_meetup(): ?array {
     return $row;
 }
 
-function get_past_meetups(): array {
+function count_past_meetups(): int {
     auto_archive();
+    return (int) db()->query("SELECT count(*) FROM meetups WHERE status = 'past'")->fetchColumn();
+}
+
+function get_past_meetups(int $page = 1, int $per_page = 10): array {
+    auto_archive();
+    $per_page = max(1, min($per_page, 50)); // sane bounds
+    $page     = max(1, $page);
+    $offset   = ($page - 1) * $per_page;
+
     $st = db()->prepare(
-        "SELECT * FROM meetups WHERE status = 'past' ORDER BY event_date DESC"
+        "SELECT * FROM meetups WHERE status = 'past'
+         ORDER BY event_date DESC
+         LIMIT ? OFFSET ?"
     );
-    $st->execute();
+    $st->execute([$per_page, $offset]);
     $rows = $st->fetchAll();
     foreach ($rows as &$r) {
         $r['translations'] = get_meetup_translations($r['id']);
